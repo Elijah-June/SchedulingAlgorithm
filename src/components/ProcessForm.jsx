@@ -42,9 +42,9 @@ export default function ProcessForm({ processes, setProcesses, mode, setMode, ti
   return (
     <>
     <div className="bg-white p-4 rounded-lg shadow">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-3">
         <h2 className="font-medium">Add Process</h2>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
           <div className="flex items-center gap-2">
             <button onClick={()=>setShowInfo(true)} title="What is the difference?" className="text-gray-600 hover:text-gray-800">
               <InformationCircleIcon className="w-5 h-5" />
@@ -68,11 +68,13 @@ export default function ProcessForm({ processes, setProcesses, mode, setMode, ti
         <label className="text-sm text-gray-600">Label (optional)</label>
         <input className="border p-2 rounded" type="text" value={label} onChange={e=>setLabel(e.target.value)} placeholder="Label (e.g. IO, CPU-bound)" />
 
-        <div className="grid grid-cols-3 gap-2 mt-2">
-          <div>
-            <label className="text-sm text-gray-600">Arrival Time</label>
-            <input className="border p-2 rounded w-full" type="number" min="0" value={arrival} onChange={e=>setArrival(e.target.value)} placeholder="0" />
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+          {mode === 'preemptive' && (
+            <div>
+              <label className="text-sm text-gray-600">Arrival Time</label>
+              <input className="border p-2 rounded w-full" type="number" min="0" value={arrival} onChange={e=>setArrival(e.target.value)} placeholder="0" />
+            </div>
+          )}
           <div>
             <label className="text-sm text-gray-600">Burst Time</label>
             <input className="border p-2 rounded w-full" type="number" min="1" value={burst} onChange={e=>setBurst(e.target.value)} placeholder="1" />
@@ -84,13 +86,13 @@ export default function ProcessForm({ processes, setProcesses, mode, setMode, ti
         </div>
       </div>
 
-      <div className="mt-3 flex gap-2">
-        <button onClick={addProcess} className="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-500">
+      <div className="mt-3 flex flex-col sm:flex-row gap-2">
+        <button onClick={addProcess} className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-500 w-full sm:w-auto">
           <PlusCircleIcon className="w-5 h-5" />
           Add
         </button>
-  {/* Recompute button removed per user request */}
-        <button onClick={()=>setProcesses([])} className="inline-flex items-center gap-2 bg-red-600 text-white px-3 py-2 rounded hover:bg-red-500">
+        {/* Recompute button removed per user request */}
+        <button onClick={()=>setProcesses([])} className="inline-flex items-center justify-center gap-2 bg-red-600 text-white px-3 py-2 rounded hover:bg-red-500 w-full sm:w-auto">
           <TrashIcon className="w-5 h-5" />
           Reset All
         </button>
