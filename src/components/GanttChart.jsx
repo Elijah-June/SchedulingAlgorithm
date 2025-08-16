@@ -11,32 +11,38 @@ export default function GanttChart({ timeline, snapshots }){
   const minStart = Math.min(...sorted.map(s=>s.start))
   const maxEnd = Math.max(...sorted.map(s=>s.end))
   const span = Math.max(1, maxEnd - minStart)
+  // compute a responsive pixel width for the timeline so it scales on mobile
+  // - pxPerUnit controls compactness: lower => more compact on small screens
+  const pxPerUnit = 28
+  const minPx = 320
+  const maxPx = 1600
+  const totalWidth = Math.min(maxPx, Math.max(minPx, Math.floor(span * pxPerUnit)))
 
   return (
     <div className="bg-white p-4 rounded-lg shadow">
       <h3 className="font-medium mb-2">Gantt Chart</h3>
-      <div className="overflow-x-auto">
-        <div className="relative h-20 min-w-[600px] border rounded bg-white/50">
+      <div className="overflow-x-auto touch-pan-x">
+        <div className="relative h-20 sm:h-24 border rounded bg-white/50" style={{minWidth: `${totalWidth}px`}}>
           {sorted.map((seg,i)=>{
             const left = ((seg.start - minStart)/span)*100
             const width = ((seg.end - seg.start)/span)*100
             const color = colors[seg.id % colors.length]
             return (
               <motion.div key={`${seg.id}-${seg.start}-${seg.end}`} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.25}}
-                className={`${color} absolute top-3 bottom-6 rounded text-white text-center flex flex-col justify-center`} style={{left: `${left}%`, width: `${width}%`, minWidth: 8}}>
-                <div className="text-sm font-medium px-1">{seg.label || `P${seg.id}`}</div>
-                <div className="text-[10px] text-black bg-white/40">{seg.start} - {seg.end} ms</div>
+                className={`${color} absolute top-3 bottom-6 rounded text-white text-center flex flex-col justify-center`} style={{left: `${left}%`, width: `${width}%`, minWidth: 6}}>
+                <div className="text-xs sm:text-sm font-medium px-1 truncate">{seg.label || `P${seg.id}`}</div>
+                <div className="text-[9px] sm:text-[10px] text-black bg-white/40 px-1">{seg.start} - {seg.end} ms</div>
               </motion.div>
             )
           })}
 
           {/* time ticks */}
-          <div className="absolute left-0 right-0 bottom-0 flex">
+          <div className="absolute left-0 right-0 bottom-0 pointer-events-none">
             {Array.from({length: Math.max(2, Math.ceil(span)+1)}).map((_,i)=>{
               const left = (i/span)*100
               const t = minStart + i
               return (
-                <div key={i} style={{left: `${left}%`}} className="relative" />
+                <div key={i} style={{left: `${left}%`}} className="relative inline-block" />
               )
             })}
           </div>
@@ -48,7 +54,7 @@ export default function GanttChart({ timeline, snapshots }){
             <h4 className="font-medium mb-2">Snapshots</h4>
             <div className="space-y-2 text-xs">
               {snapshots.map(s=> (
-                <div key={s.time} className="grid grid-cols-3 gap-3 items-start border-l pl-3 py-1">
+                <div key={s.time} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start border-l pl-3 py-1">
                   <div className="text-gray-700">Time:</div>
                   <div className="col-span-2 font-medium">{s.time} ms</div>
 
@@ -58,7 +64,7 @@ export default function GanttChart({ timeline, snapshots }){
                   <div className="text-gray-700">Remaining Time (ms):</div>
                   <div className="col-span-2">
                     {s.remaining.length? (
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-1">
                         {s.remaining.map(r=> (
                           <div key={r.id}>{(r.label || `P${r.id}`)} — {r.rem} ms</div>
                         ))}
