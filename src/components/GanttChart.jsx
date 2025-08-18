@@ -18,35 +18,63 @@ export default function GanttChart({ timeline, snapshots }){
   const maxPx = 1600
   const totalWidth = Math.min(maxPx, Math.max(minPx, Math.floor(span * pxPerUnit)))
 
+  // build lanes per process id
+  const processIds = Array.from(new Set(sorted.map(s => s.id)))
+  const rowCount = processIds.length
+  const rowHeight = 48 // px per lane
+  const totalHeight = Math.max(80, rowCount * rowHeight + 20)
+
   return (
     <div className="bg-white p-4 rounded-lg shadow">
       <h3 className="font-medium mb-2">Gantt Chart</h3>
       <div className="overflow-x-auto touch-pan-x">
-        <div className="relative h-20 sm:h-24 border rounded bg-white/50" style={{minWidth: `${totalWidth}px`}}>
-          {sorted.map((seg,i)=>{
-            const left = ((seg.start - minStart)/span)*100
-            const width = ((seg.end - seg.start)/span)*100
-            const color = colors[seg.id % colors.length]
-            return (
-              <motion.div key={`${seg.id}-${seg.start}-${seg.end}`} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.25}}
-                className={`${color} absolute top-3 bottom-6 rounded text-white text-center flex flex-col justify-center`} style={{left: `${left}%`, width: `${width}%`, minWidth: 6}}>
-                <div className="text-xs sm:text-sm font-medium px-1 truncate">{seg.label || `P${seg.id}`}</div>
-                <div className="text-[9px] sm:text-[10px] text-black bg-white/40 px-1">{seg.start} - {seg.end} ms</div>
-              </motion.div>
-            )
-          })}
+        <div className="flex">
+          {/* labels column (hidden on very small screens) */}
+          <div className="hidden sm:block w-28 pr-2">
+            <div className="h-6" />
+            {processIds.map(pid => (
+              <div key={pid} className="h-[48px] flex items-center text-sm text-gray-700 border-b" style={{height: rowHeight}}>
+                {`P${pid}`}
+              </div>
+            ))}
+          </div>
 
-          {/* time ticks */}
-          <div className="absolute left-0 right-0 bottom-0 pointer-events-none">
-            {Array.from({length: Math.max(2, Math.ceil(span)+1)}).map((_,i)=>{
-              const left = (i/span)*100
-              const t = minStart + i
+          <div className="relative border rounded bg-white/50" style={{minWidth: `${totalWidth}px`, height: `${totalHeight}px`}}>
+            {/* row backgrounds */}
+            {processIds.map((pid,idx) => (
+              <div key={`row-${pid}`} className={`${idx % 2 === 0 ? 'bg-white/0' : 'bg-gray-50'} absolute left-0 right-0`} style={{top: idx * rowHeight + 8, height: rowHeight - 8}} />
+            ))}
+
+            {sorted.map((seg,i)=>{
+              const left = ((seg.start - minStart)/span)*100
+              const width = ((seg.end - seg.start)/span)*100
+              const color = colors[seg.id % colors.length]
+              const rowIndex = processIds.indexOf(seg.id)
+              const top = 8 + rowIndex * rowHeight
               return (
-                <div key={i} style={{left: `${left}%`}} className="relative inline-block" />
+                <motion.div key={`${seg.id}-${seg.start}-${seg.end}`} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.25}}
+                  className={`${color} absolute rounded text-white flex flex-col justify-center items-start overflow-hidden`} style={{left: `${left}%`, width: `${width}%`, top: `${top}px`, height: `${rowHeight - 12}px`, minWidth: 6}}>
+                  <div className="pl-2 text-xs sm:text-sm font-medium truncate w-full">{seg.label || `P${seg.id}`}</div>
+                  <div className="pl-2 text-[9px] sm:text-[10px] text-black bg-white/40">{seg.start} - {seg.end} ms</div>
+                </motion.div>
               )
             })}
+
+            {/* time ticks (top overlay) */}
+            <div className="absolute left-0 right-0 top-0 pointer-events-none">
+              {Array.from({length: Math.max(2, Math.ceil(span)+1)}).map((_,i)=>{
+                const left = (i/span)*100
+                const t = minStart + i
+                return (
+                  <div key={i} style={{left: `${left}%`, position: 'absolute', top: 0}} className="text-[10px] text-gray-500 -mt-3">
+                    <div style={{transform: 'translateX(-50%)'}}>{t}</div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
+
   <div className="mt-2 text-xs text-gray-600">Time: {minStart} — {maxEnd} ms</div>
         {/** snapshots panel */}
         {Array.isArray(snapshots) && snapshots.length>0 && (
